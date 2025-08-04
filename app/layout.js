@@ -1,5 +1,5 @@
 import "./globals.css";
-
+import { AuthProvider } from "./hooks/useAuth";
 
 export const metadata = {
   title: "Fractalize",
@@ -9,7 +9,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

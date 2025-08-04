@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CountryDropdown } from "@/components/ui/country-dropdown"
 import { Button } from "@/components/ui/button"
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import useValidateSite from "@/app/hooks/useValidateSite";
 
-export default function Home() {
+function SetupPageContent() {
 
   const {
     isLoading: isSubmitting,
@@ -153,5 +154,14 @@ export default function Home() {
         </form>
       </Card>
     </div>
+  );
+}
+
+// Página de setup protegida com AuthGuard
+export default function SetupPage() {
+  return (
+    <AuthGuard>
+      <SetupPageContent />
+    </AuthGuard>
   );
 }
