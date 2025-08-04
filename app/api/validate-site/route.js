@@ -8,19 +8,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'URL é obrigatória' }, { status: 400 });
     }
 
-    // Normalizar URL
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
       normalizedUrl = `https://${normalizedUrl}`;
     }
 
-    // Função para gerar URL do favicon
     const getFaviconUrl = (siteUrl) => {
       return `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(siteUrl)}&size=64`;
     };
 
     try {
-      // Fazer requisição para verificar o site
       const response = await fetch(normalizedUrl, {
         method: 'HEAD',
         timeout: 10000,
@@ -53,7 +50,6 @@ export async function POST(request) {
       }
 
     } catch (fetchError) {
-      // Se fetch falhar, tentar com GET
       try {
         const getResponse = await fetch(normalizedUrl, {
           method: 'GET',

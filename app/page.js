@@ -1,7 +1,6 @@
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,61 +10,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CountryDropdown } from "@/components/ui/country-dropdown"
 import { Button } from "@/components/ui/button"
-
-// Função para validar se o site é acessível
-const validateWebsite = async (url, setFaviconUrl) => {
-  if (!url) return "Site é obrigatório";
-  
-  // Validação básica de formato URL
-  const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-  if (!urlPattern.test(url)) {
-    return "Formato de URL inválido";
-  }
-
-  try {
-    // Usar a API route para validar o site
-    const response = await fetch('/api/validate-site', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      // Se o site for válido e tiver favicon URL, definir no estado
-      if (result.faviconUrl && setFaviconUrl) {
-        setFaviconUrl(result.faviconUrl);
-      }
-      return true;
-    } else if (result.error) {
-      // Limpar favicon se houver erro
-      if (setFaviconUrl) {
-        setFaviconUrl(null);
-      }
-      return result.error;
-    } else {
-      // Limpar favicon se houver erro
-      if (setFaviconUrl) {
-        setFaviconUrl(null);
-      }
-      return "Erro desconhecido ao validar site";
-    }
-  } catch (error) {
-    console.error('Erro ao validar site:', error);
-    // Limpar favicon se houver erro
-    if (setFaviconUrl) {
-      setFaviconUrl(null);
-    }
-    return "Erro ao conectar com o serviço de validação";
-  }
-};
+import useValidateSite from "@/app/hooks/useValidateSite";
 
 export default function Home() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [faviconUrl, setFaviconUrl] = useState(null);
+
+  const {
+    isLoading: isSubmitting,
+    faviconUrl,
+    validateSite,
+  } = useValidateSite();
+
 
   const {
     register,
@@ -85,56 +39,44 @@ export default function Home() {
   });
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    
     try {
-      // Validação final do site antes de submeter
-      const siteValidation = await validateWebsite(data.site, setFaviconUrl);
+      const siteValidation = await validateSite(data.site);
       if (siteValidation !== true) {
         setError("site", {
           type: "manual",
           message: siteValidation
         });
-        setIsSubmitting(false);
         return;
       }
 
-      console.log("Dados válidos:", data);
-      // Aqui você processaria os dados do formulário
       alert("Formulário enviado com sucesso!");
       
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  // Função para validação em tempo real do site
   const handleSiteValidation = async (value) => {
     if (!value) {
-      setFaviconUrl(null);
-      return true; // Deixa a validação obrigatória para o register
+      return true;
     }
-    
+
     clearErrors("site");
-    const result = await validateWebsite(value, setFaviconUrl);
-    return result;
+
+    setTimeout(() => {
+      const result = validateSite(value);
+      return result;
+    }, 2000);
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-3">
-      {/* Exibir favicon se disponível */}
       {faviconUrl && (
         <div className="mb-2">
           <img 
             src={faviconUrl} 
             alt="Favicon da empresa" 
             className="w-16 h-16 rounded-lg shadow-md"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              setFaviconUrl(null);
-            }}
           />
         </div>
       )}
@@ -145,7 +87,6 @@ export default function Home() {
       <Card className="w-lg mt-6">
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="flex flex-col gap-6">
-            {/* Nome da empresa */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Nome da empresa</Label>
               <Input
@@ -164,7 +105,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Site da empresa */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="site">Site da empresa</Label>
               <Input
@@ -184,7 +124,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Localização padrão */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="country">Localização padrão</Label>
               <Controller
